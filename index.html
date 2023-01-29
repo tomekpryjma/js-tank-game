@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tank Game</title>
+
+    <style>
+        html, body {
+           margin: 0; 
+        }
+        canvas {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="canvas" width="680" height="420"></canvas>
+    
+<script>
+var canvas = document.getElementById('canvas');
+var ctx = canvas.getContext('2d');
+
+// For tank, there are 2 moving parts:
+/*
+ * Chassis: turn via left/right + forward & back.
+ *      Vectors where direction changes on left & right and magintude changes on forward & back.
+ * 
+ * Turret: turn left & right with keys
+*/
+
+function toRadians(degrees) {
+    return degrees / (180 * Math.PI);
+}
+
+class Rect {
+    constructor(context, x, y, w, h, colour) {
+        this.context = context;
+        this.x = x;
+        this.y = y;
+        this.w = w;
+        this.h = h;
+        this.colour = colour || 'black';
+    }
+}
+
+class Rotateable extends Rect {
+    constructor(context, x, y, w, h, colour) {
+        super(context, x, y, w, h, colour);
+        this.rotation = 0;
+        this.rotationSpeed = 20;
+        this.centre = {x: 0, y: 0};
+        this.direction = {x: 0, y: 0};
+    }
+}
+
+class Controllable extends Rotateable {
+    constructor(context, x, y, w, h, colour, speed) {
+        super(context, x, y, w, h, colour);
+        this.speed = speed;
+        this.keyMap = {
+            'KeyW': false,
+            'KeyS': false,
+            'KeyA': false,
+            'KeyD': false,
+            'ArrowLeft': false,
+            'ArrowRight': false,
+        };
+    }
+
+    keyboardInput(e) {
+        if(! this.keyMap.hasOwnProperty(e.code)) {
+            return;
+        }
+
+        if (e.type === 'keydown') {
+            this.keyMap[e.code] = true;
+        }
+        else if (e.type === 'keyup') {
+            this.keyMap[e.code] = false;
+        }
+    }
+
+    keyIsPressed(code) {
+        return this.keyMap[code];
+    }
+}
+
+class Turret extends Controllable {
+    constructor(context, x, y, w, h, colour) {
+        super(context, x, y, w, h, colour, 0);
+        this.barrel = {w: 2, h: 35};
+    }
+
+    rotate() {
+        if (this.keyIsPressed('ArrowLeft')) {
+            this.rotation -= this.rotationSpeed;
+        }
+        else if (this.keyIsPressed('ArrowRight')) {
+            this.rotation += this.rotationSpeed;
+        }
+    }
+
+    update(x, y) {
+        this.x = x - this.w / 2;
+        this.y = y - this.h / 2;
+        this.rotate();
+        this.centre.x = this.x + this.w / 2;
+        this.centre.y = this.y + this.h / 2;
+    }
+
+    draw() {
+        this.context.save();
+        this.context.translate(this.centre.x, this.centre.y);
+        this.context.rotate(toRadians(this.rotation));
+        this.context.translate(-this.centre.x, -this.centre.y);
+        this.context.strokeRect(this.x, this.y, this.w, this.h);
+
+        // Barrel
+        this.context.fillRect(
+            this.centre.x - this.barrel.w / 2,
+            this.centre.y - this.barrel.h - 10,
+            this.barrel.w,
+            this.barrel.h
+        );
+
+        this.context.restore();
+    }
+}
+
+class Tank extends Controllable {
+    constructor(context, x, y, w, h, colour, speed) {
+        super(context, x, y, w, h, colour, speed);
+        this.turret = new Turret(context, 0, 0, 20, 20);
+        this.turret.rotationSpeed = 10;
+    }
+
+    rotate() {
+        if (this.keyIsPressed('KeyA')) {
+            this.rotation -= this.rotationSpeed;
+        }
+        else if (this.keyIsPressed('KeyD')) {
+            this.rotation += this.rotationSpeed;
+        }
+
+        this.direction = {
+            x: Math.cos(toRadians(this.rotation) + Math.PI / 2),
+            y: Math.sin(toRadians(this.rotation) + Math.PI / 2)
+        };
+    }
+
+    move() {
+        var movement = 0;
+
+        if (this.keyIsPressed('KeyW')) {
+            movement = -1;
+        }
+        if (this.keyIsPressed('KeyS')) {
+            movement = 1;
+        }
+
+        this.x += movement * (this.direction.x * this.speed);
+        this.y += movement * (this.direction.y * this.speed);
+    }
+
+    update() {
+        this.rotate();
+        this.move();
+
+        this.centre.x = this.x + this.w / 2;
+        this.centre.y = this.y + this.h / 2;
+
+        this.turret.update(this.centre.x, this.centre.y);
+    }
+
+    draw() {
+        this.context.save();
+        
+        // Chassis
+        this.context.translate(this.centre.x, this.centre.y);
+        this.context.rotate(toRadians(this.rotation));
+        this.context.translate(-this.centre.x, -this.centre.y);
+        this.context.fillStyle = this.colour;
+        this.context.strokeRect(this.x, this.y, this.w, this.h);
+        this.context.restore();
+        
+        // Turret
+        this.turret.draw();
+    }
+}
+
+// Create game objects
+var player = new Tank(ctx, 300, 250, 40, 70, 'black', 2);
+player.rotationSpeed = 8;
+
+// Bind events
+window.addEventListener('keydown', function(e) {
+    player.keyboardInput(e);
+    player.turret.keyboardInput(e);
+});
+window.addEventListener('keyup', function(e) {
+    player.keyboardInput(e);
+    player.turret.keyboardInput(e);
+});
+
+// Game loop
+function app() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    player.update();
+    player.draw();
+
+    window.requestAnimationFrame(app);
+}
+app();
+
+</script>
+</body>
+</html>
