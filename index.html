@@ -186,17 +186,14 @@ class Tank extends Controllable {
     }
 
     easing(direction, easingTime) {
-        var easeX = (-1 * this.direction.x) * this.speed * Math.cos((parseFloat(easingTime) * Math.PI / 2));
-        var easeY = (-1 * this.direction.y) * this.speed * Math.cos((parseFloat(easingTime) * Math.PI / 2));
+        /**
+         * Note for self, learn how & why Math.cos works here...
+        */
+        var easeX = this.direction.x * this.speed * Math.cos(parseFloat(easingTime) * Math.PI / 2);
+        var easeY = this.direction.y * this.speed * Math.cos(parseFloat(easingTime) * Math.PI / 2);
         
-        if (direction === -1) { // move forwards
-            this.x += easeX;
-            this.y += easeY;
-        }
-        else if (direction === 1) { // move backwards
-            this.x -= easeX;
-            this.y -= easeY;
-        }
+        this.x += easeX * direction;
+        this.y += easeY * direction;
     }    
 
     movementSmoothing(easingDirection, easingIncrement, intervalSpeed, easingTimeCap) {
