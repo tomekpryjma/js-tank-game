@@ -75,12 +75,30 @@ class Controllable extends Rotateable {
             return;
         }
 
+        var original = this.keyMap[e.code];
+
         if (e.type === 'keydown') {
             this.keyMap[e.code] = true;
         }
         else if (e.type === 'keyup') {
             this.keyMap[e.code] = false;
         }
+
+        if (original === true && this.keyMap[e.code] === false) {
+            this.onKeyup(e.code);
+        }
+
+        if (original === false && this.keyMap[e.code] === true) {
+            this.onKeydown(e.code);
+        }
+    }
+
+    onKeyup(code) {
+        return;
+    }
+
+    onKeydown(code) {
+        return;
     }
 
     keyIsPressed(code) {
