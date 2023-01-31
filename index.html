@@ -35,6 +35,25 @@ function toRadians(degrees) {
     return degrees / (180 * Math.PI);
 }
 
+/**
+ * For reference look at: https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Drawing_shapes#making_combinations
+*/
+function roundedRect(context, x, y, width, height, radius, corners) {
+    corners = corners || {
+        bottomLeft: radius,
+        bottomRight: radius,
+        topRight: radius,
+        topLeft: radius,
+    }
+    context.beginPath();
+    context.moveTo(x, y + corners.topLeft);
+    context.arcTo(x, y + height, x + corners.bottomLeft, y + height, corners.bottomLeft);
+    context.arcTo(x + width, y + height, x + width, y + corners.bottomRight, corners.bottomRight);
+    context.arcTo(x + width, y, x - corners.topRight, y, corners.topRight);
+    context.arcTo(x , y, x, y + corners.topLeft, corners.topLeft);
+    context.stroke();
+}
+
 class Rect {
     constructor(context, x, y, w, h, colour) {
         this.context = context;
@@ -134,7 +153,8 @@ class Turret extends Controllable {
         this.context.translate(this.centre.x, this.centre.y);
         this.context.rotate(toRadians(this.rotation));
         this.context.translate(-this.centre.x, -this.centre.y);
-        this.context.strokeRect(this.x, this.y, this.w, this.h);
+
+        roundedRect(this.context, this.x, this.y, this.w, this.h, 2);
 
         // Barrel
         this.context.fillRect(
@@ -255,7 +275,14 @@ class Tank extends Controllable {
         this.context.rotate(toRadians(this.rotation));
         this.context.translate(-this.centre.x, -this.centre.y);
         this.context.fillStyle = this.colour;
-        this.context.strokeRect(this.x, this.y, this.w, this.h);
+
+        roundedRect(this.context, this.x, this.y, this.w, this.h, 0, {
+            bottomRight: 0,
+            bottomLeft: 0,
+            topRight: 4,
+            topLeft: 4,
+        });
+
         this.context.restore();
         
         // Turret
