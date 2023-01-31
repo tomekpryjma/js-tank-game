@@ -54,7 +54,7 @@ function roundedRect(context, x, y, width, height, radius, corners) {
     context.stroke();
 }
 
-class Rect {
+class GameObject {
     constructor(context, x, y, w, h, colour) {
         this.context = context;
         this.x = x;
@@ -65,7 +65,7 @@ class Rect {
     }
 }
 
-class Rotateable extends Rect {
+class Rotateable extends GameObject {
     constructor(context, x, y, w, h, colour) {
         super(context, x, y, w, h, colour);
         this.rotation = 0;
