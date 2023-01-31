@@ -133,10 +133,10 @@ class Turret extends Controllable {
 
     rotate() {
         if (this.keyIsPressed('ArrowLeft')) {
-            this.rotation -= this.rotationSpeed;
+            this.rotation -= this.rotationSpeed * Clock.deltaTime;
         }
         else if (this.keyIsPressed('ArrowRight')) {
-            this.rotation += this.rotationSpeed;
+            this.rotation += this.rotationSpeed * Clock.deltaTime;
         }
     }
 
@@ -172,16 +172,18 @@ class Tank extends Controllable {
     constructor(context, x, y, w, h, colour, speed) {
         super(context, x, y, w, h, colour, speed);
         this.turret = new Turret(context, 0, 0, 20, 20);
-        this.turret.rotationSpeed = 10;
+        this.turret.rotationSpeed = 400;
+        this.rotationSpeed = 350;
         this.canMove = true;
+        this.speed = 45;
     }
 
     rotate() {
         if (this.keyIsPressed('KeyA')) {
-            this.rotation -= this.rotationSpeed;
+            this.rotation -= this.rotationSpeed * Clock.deltaTime;
         }
         else if (this.keyIsPressed('KeyD')) {
-            this.rotation += this.rotationSpeed;
+            this.rotation += this.rotationSpeed * Clock.deltaTime;
         }
 
         this.direction = {
@@ -200,8 +202,8 @@ class Tank extends Controllable {
             movement = 1;
         }
 
-        this.x += movement * (this.direction.x * this.speed);
-        this.y += movement * (this.direction.y * this.speed);
+        this.x += movement * (this.direction.x * this.speed) * Clock.deltaTime;
+        this.y += movement * (this.direction.y * this.speed) * Clock.deltaTime;
 
     }
 
@@ -212,8 +214,8 @@ class Tank extends Controllable {
         var easeX = this.direction.x * this.speed * Math.cos(parseFloat(easingTime) * Math.PI / 2);
         var easeY = this.direction.y * this.speed * Math.cos(parseFloat(easingTime) * Math.PI / 2);
         
-        this.x += easeX * direction;
-        this.y += easeY * direction;
+        this.x += easeX * direction * Clock.deltaTime;
+        this.y += easeY * direction * Clock.deltaTime;
     }    
 
     movementSmoothing(easingDirection, easingIncrement, intervalSpeed, easingTimeCap, onComplete) {
@@ -290,9 +292,19 @@ class Tank extends Controllable {
     }
 }
 
+// For reference: https://spicyyoghurt.com/tutorials/html5-javascript-game-development/create-a-smooth-canvas-animation
+class Clock {
+    static deltaTime = 0;
+    static lastTimeStamp = 0;
+
+    static tick(timeStamp) {
+        Clock.deltaTime = (timeStamp - Clock.lastTimeStamp) / 1000;
+        Clock.lastTimeStamp = timeStamp;
+    }
+}
+
 // Create game objects
 var player = new Tank(ctx, 300, 250, 40, 70, 'black', 1);
-player.rotationSpeed = 8;
 
 // Bind events
 window.addEventListener('keydown', function(e) {
@@ -305,15 +317,18 @@ window.addEventListener('keyup', function(e) {
 });
 
 // Game loop
-function app() {
+var lastTimeStamp = 0;
+var deltaTime = 0;
+function app(timeStamp) {
+    Clock.tick(timeStamp);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    player.update();
+    player.update(deltaTime);
     player.draw();
 
     window.requestAnimationFrame(app);
 }
-app();
+window.requestAnimationFrame(app);
 
 </script>
 </body>
