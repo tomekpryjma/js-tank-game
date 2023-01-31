@@ -303,6 +303,23 @@ class Clock {
     }
 }
 
+class Spark extends GameObject {
+    constructor(context, x, y, w, h, colour) {
+        super(context, x, y, w, h, colour);
+    }
+
+    draw() {
+        this.context.save();
+        this.context.strokeStyle = this.colour;
+        this.context.beginPath();
+        this.context.moveTo(50, 50);
+        this.context.lineTo(100, 100);
+        this.context.stroke();
+        this.context.restore();
+    }
+}
+var spark = new Spark(ctx, 50, 50, 1, 20, 'orange');
+
 // Create game objects
 var player = new Tank(ctx, 300, 250, 40, 70, 'black', 1);
 
@@ -325,6 +342,7 @@ function app(timeStamp) {
 
     player.update(deltaTime);
     player.draw();
+    spark.draw();
 
     window.requestAnimationFrame(app);
 }
